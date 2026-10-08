@@ -1,0 +1,35 @@
+Funding for public personal original repositories
+
+The template is funding/FUNDING.yml. Do not move it to .github/FUNDING.yml
+or FUNDING.yml in this repository. GitHub's account-wide fallback cannot
+exclude forks, private repositories, or work repositories.
+
+Existing repositories must have a reviewed origin in funding/policy.json.
+For future projects, add the personal-project topic only when the project
+is your own personal original, rather than an import or a work/startup
+project. The script also requires public visibility, explicit fork=false,
+an owner-attributed root commit, and no exclusion matches. Potential imports
+identified in project metadata need a manual provenance review.
+
+Run without mutations:
+  python3 scripts/update_funding.py
+
+Publish eligible updates using an authenticated jeremykenedy credential:
+  python3 scripts/update_funding.py --apply
+
+GitHub Actions publishing is disabled until FUNDING_TOKEN is configured
+and the FUNDING_AUTOMATION_ENABLED repository variable is set to true.
+The default GITHUB_TOKEN cannot write to other repositories. Use a dedicated
+credential with access only to eligible public personal repositories where
+possible. Funding writes require Contents write; enabling the Sponsor
+setting requires repository Administration write. Repository protection
+rules are honored. A rejected write fails visibly for manual resolution;
+the script does not bypass protection or change repository visibility.
+
+Manual workflow runs default to a read-only check. Scheduled runs are daily
+at 06:17 UTC on a standard public GitHub-hosted runner. GitHub may delay or
+drop scheduled jobs, and disables schedules after 60 days without repository
+activity. Re-enable the workflow when needed; do not rely on instant updates
+when creating a new repository.
+
+All funding commits use: Add global funding options

@@ -1,0 +1,61 @@
+name: Update personal funding
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Publish funding updates to eligible repositories
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: personal-funding
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - run: python -m unittest discover -s tests -v
+
+  funding:
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && vars.FUNDING_AUTOMATION_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Check or publish funding
+        env:
+          GH_TOKEN: ${{ secrets.FUNDING_TOKEN || github.token }}
+          FUNDING_TOKEN_CONFIGURED: ${{ secrets.FUNDING_TOKEN != '' }}
+          APPLY: ${{ github.event_name == 'schedule' || inputs.apply }}
+        run: |
+          if [ "$APPLY" = "true" ]; then
+            if [ "$FUNDING_TOKEN_CONFIGURED" != "true" ]; then
+              echo 'FUNDING_TOKEN is required before publishing cross-repository updates.'
+              exit 1
+            fi
+            python scripts/update_funding.py --apply
+          else
+            python scripts/update_funding.py
+          fi
